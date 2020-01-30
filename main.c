@@ -67,7 +67,7 @@ void portSetup(void){
 void parseData(unsigned char *str){
     //save received data in data structure
     gps_data.hour = 16;
-    gps_data.minutes = 58;
+    gps_data.minutes = 57;
     gps_data.seconds = 59;
     
     gps_data.status = 1;
