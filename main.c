@@ -23,9 +23,7 @@
 #define PIC2_ADDR 0x1C
 #define PIC3_ADDR 0x1D
 
-unsigned char uart_data = 0;
-bool no_errors = false;
-unsigned char gps_buffer[3] = {0};
+unsigned char gps_buffer[14] = {0};
 unsigned char input_message[256] = {0};
 unsigned char print_buffer[256] = {0};
 
@@ -66,8 +64,24 @@ void portSetup(void){
     PORTC = 0x00;
 }
 
-void parseData(unsigned char *c){
+void parseData(unsigned char *str){
+    //save received data in data structure
+    gps_data.hour = 16;
+    gps_data.minutes = 58;
+    gps_data.seconds = 59;
     
+    gps_data.status = 1;
+    gps_data.north_not_south = 1;
+    gps_data.east_not_west = 1;
+    
+    gps_data.day = 31;
+    gps_data.month = 2;
+    gps_data.year = 222;
+    
+    if(SSPSTATbits.P){      //I2C, stop bit was detected last, Last message has finished sending
+        memcpy(gps_buffer,&gps_data,sizeof(gps_data));
+        memset(&gps_data,0,sizeof(gps_data));   //Clear all information in data structure
+    }
 }
 
 void __interrupt(high_priority) isr_high(void){  
@@ -75,10 +89,12 @@ void __interrupt(high_priority) isr_high(void){
     if(PIE1bits.RC1IE && PIR1bits.RC1IF){
         static unsigned char n;     //initialized with 0 even if not explicitly
         static bool save_input = false;
+        unsigned char uart_data = 0;
+        bool no_errors = false;
         
         uartReceive(&uart_data, &no_errors);
         
-        if(no_errors){   
+        if(no_errors){
             switch(uart_data){
                 case '$':
                     if(!save_input){
@@ -90,8 +106,11 @@ void __interrupt(high_priority) isr_high(void){
                 case '\n':
                     if(save_input){
                         input_message[n++] = uart_data;
-                        parseData(input_message);
-                        memset(input_message, 0, sizeof(input_message));
+                        
+                        sprintf(print_buffer, input_message);   //save input_message as a string in print_buffer
+                        parseData(print_buffer);
+                        
+                        memset(input_message, 0, sizeof(input_message));    //clear UART buffer
                         save_input = false;
                     }
                     break;
@@ -128,21 +147,7 @@ void main(void) {
     I2CInit(0, PIC1_ADDR);
     uartInit(25,0,0,0);
     
-    memset(&gps_data,0,sizeof(gps_data));
-    
-    gps_data.hour = 16;
-    gps_data.minutes = 58;
-    gps_data.seconds = 59;
-    
-    gps_data.status = 1;
-    gps_data.north_not_south = 1;
-    gps_data.east_not_west = 1;
-    
-    gps_data.day = 31;
-    gps_data.month = 2;
-    gps_data.year = 222;
-    
-    memcpy(gps_buffer,&gps_data,sizeof(gps_data));
+    memset(&gps_data,0,sizeof(gps_data));   //Clear all information in data structure
     while(1);
 }
 
