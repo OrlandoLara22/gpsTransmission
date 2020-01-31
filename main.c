@@ -78,6 +78,16 @@ void parseData(unsigned char *str){
     gps_data.month = 2;
     gps_data.year = 222;
     
+    gps_data.lat_deg = 14;
+    gps_data.lat_min = 15;
+    gps_data.lat_min_dec_L = 16;
+    gps_data.lat_min_dec_H = 17;
+    
+    gps_data.lon_deg = 18;
+    gps_data.lon_min = 19;
+    gps_data.lon_min_dec_L = 20;
+    gps_data.lon_min_dec_H = 21;
+    
     if(SSPSTATbits.P){      //I2C, stop bit was detected last, Last message has finished sending
         memcpy(gps_buffer,&gps_data,sizeof(gps_data));
         memset(&gps_data,0,sizeof(gps_data));   //Clear all information in data structure
