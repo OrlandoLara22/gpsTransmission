@@ -65,6 +65,63 @@ void portSetup(void){
 }
 
 void parseData(unsigned char *str){
+    int n = 0, key = 0;
+    
+    while(str[n] != '\0')
+    {
+        if(str[n++] == ','){
+            key++;
+            continue;
+        }
+        
+        switch(key){
+            case 1:
+                unsigned char hour_tens = (int)str[n++] - 48;
+                unsigned char hour_ones = (int)str[n++] - 48;
+                gps_data.hour = hour_tens*10 + hour_ones;
+                
+                unsigned char minutes_tens = (int)str[n++] - 48;
+                unsigned char minutes_ones = (int)str[n++] - 48;
+                gps_data.minutes = minutes_tens*10 + minutes_ones;
+                
+                unsigned char seconds_tens = (int)str[n++] - 48;
+                unsigned char seconds_ones = (int)str[n++] - 48;
+                gps_data.seconds = seconds_tens*10 + seconds_ones;
+                break;
+            case 2:
+                if(str[n++] == 'A'){
+                    gps_data.status = 1;
+                }
+                else
+                    gps_data.status = 0;
+                break;
+            case 3:
+                unsigned char deg_tens = (int)str[n++] - 48;
+                unsigned char deg_ones = (int)str[n++] - 48;
+                gps_data.lat_deg = deg_tens*10 + deg_ones;
+                
+                unsigned char min_tens = (int)str[n++] - 48;
+                unsigned char min_ones = (int)str[n++] - 48;
+                gps_data.lat_min = min_tens*10 + min_ones;
+                
+                unsigned char minH_tens = (int)str[n++] - 48;
+                unsigned char minH_ones = (int)str[n++] - 48;
+                gps_data.lat_min_dec_H = minH_tens*10 + minH_ones;
+                
+                unsigned char minL_tens = (int)str[n++] - 48;
+                unsigned char minL_ones = (int)str[n++] - 48;
+                gps_data.lat_min_dec_L = minL_tens*10 + minL_ones;
+                break;
+            case 4:
+                break;
+            case 5:
+                break;
+            case 6:
+                break;
+            case 9:
+                break;
+        }
+    }
     //save received data in data structure
     gps_data.hour = 16;
     gps_data.minutes = 57;
