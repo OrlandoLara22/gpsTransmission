@@ -49,9 +49,6 @@ typedef struct{
 gps_data_read gps_data;
 unsigned char gps_buffer[15] = {0};
 unsigned char input_message[256] = {0};
-unsigned char print_buffer[256] = {0};
-
-unsigned char rmc[] = "PC,555555.000,A,4042.6142,N,07400.4168,W,2.03,221.11,160412,,,A*77\r\n";     //null character is automatically added
 
 void portSetup(void){
     //Make sure that all unused IO pins are set to output and cleared
@@ -69,97 +66,95 @@ void parseData(unsigned char *str){
     unsigned char hundreds = 0, tens = 0, ones = 0;
     
     
-    while(str[n] != '\0')
+    while(str[n] != 0)
     {
         if(str[n++] == ','){    //if "," then move to the next group with group++
-            group++;
-        }
-        
-        switch(group){
-            case 1:
-                tens = (int)str[n++] - 48;
-                ones = (int)str[n++] - 48;
-                gps_data.hour = tens*10 + ones;
-                
-                tens = (int)str[n++] - 48;
-                ones = (int)str[n++] - 48;
-                gps_data.minute = tens*10 + ones;
-                
-                tens = (int)str[n++] - 48;
-                ones = (int)str[n++] - 48;
-                gps_data.second = tens*10 + ones;
-                break;
-            case 2:
-                if(str[n++] == 'A'){
-                    gps_data.status = 1;
-                }
-                else
-                    gps_data.status = 0;
-                break;
-            case 3:
-                tens = (int)str[n++] - 48;
-                ones = (int)str[n++] - 48;
-                gps_data.lat_deg = tens*10 + ones;
-                
-                tens = (int)str[n++] - 48;
-                ones = (int)str[n++] - 48;
-                gps_data.lat_minutes = tens*10 + ones;
-                
-                n++; //Ignore the decimal point
-                
-                tens = (int)str[n++] - 48;
-                ones = (int)str[n++] - 48;
-                gps_data.lat_dec_minutes = (int)(tens*10 + ones)*100;   // This is the hundreds and thousands place
-                tens = (int)str[n++] - 48;
-                ones = (int)str[n++] - 48;
-                gps_data.lat_dec_minutes += (int)(tens*10 + ones);
-                break;
-            case 4:
-                if(str[n++] == 'N'){
-                    gps_data.north_not_south = 1;
-                }
-                else
-                    gps_data.north_not_south = 0;
-                break;
-            case 5:
-                hundreds = (int)str[n++] - 48;
-                tens = (int)str[n++] - 48;
-                ones = (int)str[n++] - 48;
-                gps_data.lon_deg = hundreds*100 + tens*10 + ones;
-                
-                tens = (int)str[n++] - 48;
-                ones = (int)str[n++] - 48;
-                gps_data.lon_minutes = tens*10 + ones;
-                
-                n++; // Ignore the decimal point
-                
-                tens = (int)str[n++] - 48;
-                ones = (int)str[n++] - 48;
-                gps_data.lon_dec_minutes = (int)(tens*10 + ones)*100;   // This is the hundreds and thousands place
-                tens = (int)str[n++] - 48;
-                ones = (int)str[n++] - 48;
-                gps_data.lon_dec_minutes += (int)(tens*10 + ones);
-                break;
-            case 6:
-                if(str[n++] == 'E'){
-                    gps_data.east_not_west = 1;
-                }
-                else
-                    gps_data.east_not_west = 0;
-                break;
-            case 9:
-                tens = (int)str[n++] - 48;
-                ones = (int)str[n++] - 48;
-                gps_data.day = tens*10 + ones;
-                
-                tens = (int)str[n++] - 48;
-                ones = (int)str[n++] - 48;
-                gps_data.month = tens*10 + ones;
-                
-                tens = (int)str[n++] - 48;
-                ones = (int)str[n++] - 48;
-                gps_data.year = tens*10 + ones;
-                break;
+            switch(++group){
+                case 1:
+                    tens = (int)str[n++] - 48;
+                    ones = (int)str[n++] - 48;
+                    gps_data.hour = tens*10 + ones;
+
+                    tens = (int)str[n++] - 48;
+                    ones = (int)str[n++] - 48;
+                    gps_data.minute = tens*10 + ones;
+
+                    tens = (int)str[n++] - 48;
+                    ones = (int)str[n++] - 48;
+                    gps_data.second = tens*10 + ones;
+                    break;
+                case 2:
+                    if(str[n++] == 'A'){
+                        gps_data.status = 1;
+                    }
+                    else
+                        gps_data.status = 0;
+                    break;
+                case 3:
+                    tens = (int)str[n++] - 48;
+                    ones = (int)str[n++] - 48;
+                    gps_data.lat_deg = tens*10 + ones;
+
+                    tens = (int)str[n++] - 48;
+                    ones = (int)str[n++] - 48;
+                    gps_data.lat_minutes = tens*10 + ones;
+
+                    n++; //Ignore the decimal point
+
+                    tens = (int)str[n++] - 48;
+                    ones = (int)str[n++] - 48;
+                    gps_data.lat_dec_minutes = (int)(tens*10 + ones)*100;   // This is the hundreds and thousands place
+                    tens = (int)str[n++] - 48;
+                    ones = (int)str[n++] - 48;
+                    gps_data.lat_dec_minutes += (int)(tens*10 + ones);
+                    break;
+                case 4:
+                    if(str[n++] == 'N'){
+                        gps_data.north_not_south = 1;
+                    }
+                    else
+                        gps_data.north_not_south = 0;
+                    break;
+                case 5:
+                    hundreds = (int)str[n++] - 48;
+                    tens = (int)str[n++] - 48;
+                    ones = (int)str[n++] - 48;
+                    gps_data.lon_deg = hundreds*100 + tens*10 + ones;
+
+                    tens = (int)str[n++] - 48;
+                    ones = (int)str[n++] - 48;
+                    gps_data.lon_minutes = tens*10 + ones;
+
+                    n++; // Ignore the decimal point
+
+                    tens = (int)str[n++] - 48;
+                    ones = (int)str[n++] - 48;
+                    gps_data.lon_dec_minutes = (int)(tens*10 + ones)*100;   // This is the hundreds and thousands place
+                    tens = (int)str[n++] - 48;
+                    ones = (int)str[n++] - 48;
+                    gps_data.lon_dec_minutes += (int)(tens*10 + ones);
+                    break;
+                case 6:
+                    if(str[n++] == 'E'){
+                        gps_data.east_not_west = 1;
+                    }
+                    else
+                        gps_data.east_not_west = 0;
+                    break;
+                case 9:
+                    tens = (int)str[n++] - 48;
+                    ones = (int)str[n++] - 48;
+                    gps_data.day = tens*10 + ones;
+
+                    tens = (int)str[n++] - 48;
+                    ones = (int)str[n++] - 48;
+                    gps_data.month = tens*10 + ones;
+
+                    tens = (int)str[n++] - 48;
+                    ones = (int)str[n++] - 48;
+                    gps_data.year = tens*10 + ones;
+                    break;
+            }
         }
     }
     
@@ -191,11 +186,8 @@ void __interrupt(high_priority) isr_high(void){
                 case '\n':
                     if(save_input){
                         input_message[n++] = uart_data;
-                        
-                        //memcpy(print_buffer, input_message, sizeof(input_message));
-                        sprintf(print_buffer, rmc);   //save input_message as a string in print_buffer
-                        parseData(print_buffer);
-                        
+                        parseData(input_message);
+
                         memset(input_message, 0, sizeof(input_message));    //clear UART buffer
                         save_input = false;
                     }
