@@ -45,7 +45,7 @@ void I2CReceive(char *msg_input){
     
 }
 
-void I2CCheckError(){
+void I2CCheckError(void){
     if(SSPSTATbits.BF){
         char err = SSPBUF;      //clear BF bit by reading SSPBUF
     }
