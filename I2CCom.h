@@ -14,7 +14,7 @@
 void I2CInit(char operation_mode, char address);
 void I2CSend(int input);
 void I2CReceive(char *msg_input);
-void I2CCheckError();
+void I2CCheckError(void);
 
 #endif	/* I2CCOM_H */
 
