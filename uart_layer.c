@@ -46,7 +46,7 @@ void uartSendArray(unsigned char *c, unsigned int length){
 
 void uartSendString(unsigned char *c){
     char n = 0;
-    while(c[n] != '\0'){    //continue until null character (evaluates to 0 in decimal)
+    while(c[n] != 0){    //continue until null character (evaluates to 0 in decimal)
         uartSend(c[n]);
         n++;
     }
