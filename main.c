@@ -32,6 +32,7 @@ typedef struct{
     unsigned char hour;
     unsigned char minute;
     unsigned char second;
+    unsigned int mili_second;
     
     unsigned char day;
     unsigned char month;
@@ -47,18 +48,26 @@ typedef struct{
 }gps_data_read;
 
 gps_data_read gps_data;
-unsigned char gps_buffer[15] = {0};
+unsigned char gps_buffer[17] = {0};
 unsigned char input_message[256] = {0};
+
+unsigned char PMTK_SET_RMC_ONLY[] = "$PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n";     //null character is automatically added
+unsigned char PMTK_SET_NMEA_UPDATE_10HZ[] = "$PMTK220,100*2F\r\n";  //Set GPS transmission rate to 10hz
+unsigned char PMTK_SET_NMEA_UPDATE_5HZ[] = "$PMTK220,200*2C\r\n";   //Set GPS transmission rate to 5hz
+unsigned char PMTK_SET_NMEA_UPDATE_2HZ[] = "$PMTK220,500*2B\r\n";   //Set GPS transmission rate to 5hz
+unsigned char PMTK_SET_NMEA_UPDATE_1HZ[] = "$PMTK220,1000*1F\r\n";  //Set GPS transmission rate to 1hz
 
 void portSetup(void){
     //Make sure that all unused IO pins are set to output and cleared
     TRISA = 0x00;
-    TRISB = 0x00;
+    TRISB = 0x01;   //RB0 is input
     TRISC = 0x00;
     
     PORTA = 0x00;
     PORTB = 0x00;
     PORTC = 0x00;
+    
+    ANSEL10 = 0;    //set RB0 to digital not analog
 }
 
 void parseData(unsigned char *str){
@@ -82,6 +91,14 @@ void parseData(unsigned char *str){
                     tens = (int)str[n++] - 48;
                     ones = (int)str[n++] - 48;
                     gps_data.second = tens*10 + ones;
+                    
+                    n++;    //Ignore the decimal point
+                    
+                    hundreds = (int)str[n++] - 48;
+                    tens = (int)str[n++] - 48;
+                    ones = (int)str[n++] - 48;
+                    
+                    gps_data.mili_second = hundreds*100 + tens*10 + ones;
                     break;
                 case 2:
                     if(str[n++] == 'A'){
@@ -218,6 +235,8 @@ void __interrupt(high_priority) isr_high(void){
 }
 
 void main(void) {
+    unsigned char message = 0;
+    bool button_held = false;
     IPEN = 1;       //Enable interrupt priorities
     GIEH = 1;       //Enable High priority interruptions
     
@@ -226,6 +245,35 @@ void main(void) {
     uartInit(25,0,0,0);
     
     memset(&gps_data,0,sizeof(gps_data));   //Clear all information in data structure
-    while(1);
+    while(1){
+         if(PORTBbits.RB0 == 1 && !button_held){
+             button_held = true;
+             switch(message++){
+                 case 0:
+                     uartSendString(PMTK_SET_NMEA_UPDATE_10HZ);
+                     //uartSendString(PMTK_SET_RMC_ONLY);
+                     break;
+                 case 1:
+                     uartSendString(PMTK_SET_NMEA_UPDATE_5HZ);
+                     //uartSendString(PMTK_SET_RMC_ONLY);
+                     break;
+                 case 2:
+                     uartSendString(PMTK_SET_NMEA_UPDATE_1HZ);
+                     //uartSendString(PMTK_SET_RMC_ONLY);
+                     break;
+             }
+             if(message >= 3){
+                 message = 0;
+             }
+        }
+         else if(PORTBbits.RB0 == 0){
+             button_held = false;
+         }
+         if(button_held){
+             RC2 = 1;   //LED OFF
+         }
+         else
+             RC2 = 0;   //LED ON
+    }
 }
 
