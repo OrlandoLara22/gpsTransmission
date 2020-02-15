@@ -68,6 +68,8 @@ void portSetup(void){
     PORTC = 0x00;
     
     ANSEL10 = 0;    //set RB0 to digital not analog
+    INTCON2bits.RBPU = 0;   //PORTB pull ups are enabled
+    WPUB0 = 1;
 }
 
 void parseData(unsigned char *str){
@@ -246,7 +248,7 @@ void main(void) {
     
     memset(&gps_data,0,sizeof(gps_data));   //Clear all information in data structure
     while(1){
-         if(PORTBbits.RB0 == 1 && !button_held){
+         if(PORTBbits.RB0 == 0 && !button_held){
              button_held = true;
              switch(message++){
                  case 0:
@@ -266,7 +268,7 @@ void main(void) {
                  message = 0;
              }
         }
-         else if(PORTBbits.RB0 == 0){
+         else if(PORTBbits.RB0 == 1){
              button_held = false;
          }
          if(button_held){
